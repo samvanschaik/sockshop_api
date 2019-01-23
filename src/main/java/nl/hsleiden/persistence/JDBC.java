@@ -27,7 +27,7 @@ public class JDBC {
         source.setDatabaseName("sockshop");
         source.setUser("postgres");
         source.setPassword("123");
-        source.setMaxConnections(10);
+        source.setMaxConnections(100);
         
         try {
             return source.getConnection();
