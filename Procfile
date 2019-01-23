@@ -1,0 +1,1 @@
+web: java -jar target/workshop-api-1.0-SNAPSHOT.jar
