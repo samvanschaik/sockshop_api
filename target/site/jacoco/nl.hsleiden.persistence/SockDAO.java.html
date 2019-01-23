@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SockDAO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">workshop-api</a> &gt; <a href="index.source.html" class="el_package">nl.hsleiden.persistence</a> &gt; <span class="el_source">SockDAO.java</span></div><h1>SockDAO.java</h1><pre class="source lang-java linenums">package nl.hsleiden.persistence;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.inject.Singleton;
+import nl.hsleiden.model.Sock;
+
+/**
+ *
+ * @author Peter van Vliet
+ */
+@Singleton
+public class SockDAO
+{   
+<span class="nc" id="L21">    public SockDAO(){</span>
+<span class="nc" id="L22">    }</span>
+    
+    public List&lt;Sock&gt; getAll(){
+<span class="nc" id="L25">        List&lt;Sock&gt; socks = new ArrayList&lt;&gt;();</span>
+        try {   
+<span class="nc" id="L27">            Connection c = JDBC.getConnection();</span>
+<span class="nc" id="L28">            PreparedStatement ps = c.prepareStatement(&quot;SELECT * FROM socks&quot;);</span>
+<span class="nc" id="L29">            ResultSet rs = ps.executeQuery();</span>
+
+<span class="nc bnc" id="L31" title="All 2 branches missed.">            while(rs.next()){</span>
+<span class="nc" id="L32">                socks.add(extractFromResultSet(rs));</span>
+            }
+<span class="nc" id="L34">            c.close();</span>
+<span class="nc" id="L35">        } catch (SQLException ex){</span>
+<span class="nc" id="L36">            Logger.getLogger(SockDAO.class.getName()).log(Level.SEVERE, null, ex);</span>
+<span class="nc" id="L37">        }</span>
+<span class="nc" id="L38">        return socks;</span>
+    }
+    
+    public Sock get(String sock_name){
+<span class="nc" id="L42">        Sock sock = new Sock();</span>
+<span class="nc" id="L43">        Connection c = null;</span>
+<span class="nc" id="L44">        PreparedStatement ps = null;</span>
+<span class="nc" id="L45">        ResultSet rs = null;</span>
+        
+<span class="nc" id="L47">        String sql = &quot;SELECT * FROM socks WHERE sock_name = ?&quot;;</span>
+        
+        try {
+<span class="nc" id="L50">            c = JDBC.getConnection();</span>
+<span class="nc" id="L51">            ps = c.prepareStatement(sql);</span>
+<span class="nc" id="L52">            ps.setString(1, sock_name);</span>
+<span class="nc" id="L53">            rs = ps.executeQuery();</span>
+            
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            if(rs.next()){</span>
+<span class="nc" id="L56">                sock = extractFromResultSet(rs);</span>
+            }
+            
+<span class="nc" id="L59">        } catch(SQLException ex){</span>
+<span class="nc" id="L60">            Logger.getLogger(SockDAO.class.getName()).log(Level.SEVERE, null, ex);</span>
+<span class="nc" id="L61">        } </span>
+<span class="nc" id="L62">        return sock;</span>
+    }
+    
+    public void add(Sock sock){
+<span class="nc" id="L66">        Connection c = null;</span>
+<span class="nc" id="L67">        PreparedStatement ps = null;</span>
+<span class="nc" id="L68">        ResultSet rs = null;</span>
+        
+<span class="nc" id="L70">        String sql = &quot;INSERT INTO socks (sock_name, sock_size, sock_color, sock_price, sock_amount_stocked, sock_url)\n&quot; +</span>
+                     &quot;VALUES (?, ?, ?, ?, ?, ?)&quot;;
+        
+        try {
+<span class="nc" id="L74">            c = JDBC.getConnection();</span>
+<span class="nc" id="L75">            ps = c.prepareStatement(sql);</span>
+<span class="nc" id="L76">            ps.setString(1, sock.getSock_name());</span>
+<span class="nc" id="L77">            ps.setString(2, sock.getSock_size());</span>
+<span class="nc" id="L78">            ps.setString(3, sock.getSock_color());</span>
+<span class="nc" id="L79">            ps.setInt(4, sock.getSock_price());</span>
+<span class="nc" id="L80">            ps.setInt(5, sock.getSock_amount_stocked());</span>
+<span class="nc" id="L81">            ps.setString(6, sock.getSock_url());</span>
+<span class="nc" id="L82">            ps.execute();</span>
+<span class="nc" id="L83">        } catch(SQLException ex){</span>
+<span class="nc" id="L84">            Logger.getLogger(SockDAO.class.getName()).log(Level.SEVERE, null, ex);</span>
+<span class="nc" id="L85">        } </span>
+<span class="nc" id="L86">    }</span>
+    
+    public void update(String sock_name, Sock sock){ 
+<span class="nc" id="L89">        Connection c = null;</span>
+<span class="nc" id="L90">        PreparedStatement ps = null;</span>
+        
+<span class="nc" id="L92">        String sql = &quot;UPDATE socks SET sock_name = ?,&quot;</span>
+                + &quot;sock_size = ?,&quot;
+                + &quot;sock_color = ?,&quot;
+                + &quot;sock_price = ?,&quot;
+                + &quot;sock_amount_stocked = ?,&quot;
+                + &quot;sock_url = ? &quot;
+                + &quot;WHERE sock_name = ?&quot;;
+        
+        try {
+<span class="nc" id="L101">            c = JDBC.getConnection();</span>
+<span class="nc" id="L102">            ps = c.prepareStatement(sql);</span>
+<span class="nc" id="L103">            ps.setString(1, sock.getSock_name());</span>
+<span class="nc" id="L104">            ps.setString(2, sock.getSock_size());</span>
+<span class="nc" id="L105">            ps.setString(3, sock.getSock_color());</span>
+<span class="nc" id="L106">            ps.setInt(4, sock.getSock_price());</span>
+<span class="nc" id="L107">            ps.setInt(5, sock.getSock_amount_stocked());</span>
+<span class="nc" id="L108">            ps.setString(6, sock.getSock_url());</span>
+<span class="nc" id="L109">            ps.setString(7, sock_name);</span>
+<span class="nc" id="L110">            ps.execute();</span>
+<span class="nc" id="L111">        } catch(SQLException ex){</span>
+<span class="nc" id="L112">            Logger.getLogger(SockDAO.class.getName()).log(Level.SEVERE, null, ex);</span>
+<span class="nc" id="L113">        }      </span>
+<span class="nc" id="L114">    }</span>
+    
+    public void delete(String sock_name){
+<span class="nc" id="L117">        Connection c = null;</span>
+<span class="nc" id="L118">        PreparedStatement ps = null;</span>
+        
+<span class="nc" id="L120">        String sql = &quot;DELETE FROM socks WHERE sock_name = ?&quot;;</span>
+        
+        try {
+<span class="nc" id="L123">            c = JDBC.getConnection();</span>
+<span class="nc" id="L124">            ps = c.prepareStatement(sql);</span>
+<span class="nc" id="L125">            ps.setString(1, sock_name);</span>
+<span class="nc" id="L126">            ps.execute();</span>
+<span class="nc" id="L127">        } catch(SQLException ex){</span>
+<span class="nc" id="L128">            Logger.getLogger(SockDAO.class.getName()).log(Level.SEVERE, null, ex);</span>
+<span class="nc" id="L129">        } </span>
+<span class="nc" id="L130">    }</span>
+    
+    public Sock extractFromResultSet(ResultSet rs){
+<span class="nc" id="L133">        Sock sock = new Sock();</span>
+        try {
+<span class="nc" id="L135">            sock.setSock_name(rs.getString(&quot;sock_name&quot;));</span>
+<span class="nc" id="L136">            sock.setSock_size(rs.getString(&quot;sock_size&quot;));</span>
+<span class="nc" id="L137">            sock.setSock_color(rs.getString(&quot;sock_color&quot;));</span>
+<span class="nc" id="L138">            sock.setSock_price(rs.getInt(&quot;sock_price&quot;));</span>
+<span class="nc" id="L139">            sock.setSock_amount_stocked(rs.getInt(&quot;sock_amount_stocked&quot;));</span>
+<span class="nc" id="L140">            sock.setSock_url(rs.getString(&quot;sock_url&quot;));</span>
+<span class="nc" id="L141">        } catch (SQLException ex) {</span>
+<span class="nc" id="L142">            Logger.getLogger(SockDAO.class.getName()).log(Level.SEVERE, null, ex);</span>
+<span class="nc" id="L143">        }</span>
+<span class="nc" id="L144">        return sock;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

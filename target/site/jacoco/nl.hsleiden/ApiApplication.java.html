@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiApplication.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">workshop-api</a> &gt; <a href="index.source.html" class="el_package">nl.hsleiden</a> &gt; <span class="el_source">ApiApplication.java</span></div><h1>ApiApplication.java</h1><pre class="source lang-java linenums">package nl.hsleiden;
+
+import com.google.inject.Module;
+import com.hubspot.dropwizard.guice.GuiceBundle.Builder;
+import com.hubspot.dropwizard.guice.GuiceBundle;
+import io.dropwizard.Application;
+import io.dropwizard.ConfiguredBundle;
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
+import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import java.util.EnumSet;
+import javax.servlet.DispatcherType;
+import nl.hsleiden.model.User;
+import nl.hsleiden.service.AuthenticationService;
+import org.eclipse.jetty.servlet.FilterHolder;
+import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ *
+ * @author Peter van Vliet
+ */
+<span class="nc" id="L27">public class ApiApplication extends Application&lt;ApiConfiguration&gt;</span>
+{
+<span class="nc" id="L29">    private final Logger logger = LoggerFactory.getLogger(ApiApplication.class);</span>
+    
+    private ConfiguredBundle assetsBundle;
+    private GuiceBundle guiceBundle;
+    
+    private String name;
+    
+    @Override
+    public String getName()
+    {
+<span class="nc" id="L39">        return name;</span>
+    }
+    
+    @Override
+    public void initialize(Bootstrap&lt;ApiConfiguration&gt; bootstrap)
+    {
+<span class="nc" id="L45">        assetsBundle = (ConfiguredBundle) new ConfiguredAssetsBundle(&quot;/assets/&quot;, &quot;/client&quot;, &quot;index.html&quot;);</span>
+<span class="nc" id="L46">        guiceBundle = createGuiceBundle(ApiConfiguration.class, new ApiGuiceModule());</span>
+        
+<span class="nc" id="L48">        bootstrap.addBundle(assetsBundle);</span>
+<span class="nc" id="L49">        bootstrap.addBundle(guiceBundle);</span>
+<span class="nc" id="L50">    }</span>
+    
+    @Override
+    public void run(ApiConfiguration configuration, Environment environment)
+    {
+<span class="nc" id="L55">        name = configuration.getApiName();</span>
+        
+<span class="nc" id="L57">        logger.info(String.format(&quot;Set API name to %s&quot;, name));</span>
+        
+<span class="nc" id="L59">        setupAuthentication(environment);</span>
+<span class="nc" id="L60">        configureClientFilter(environment);</span>
+<span class="nc" id="L61">    }</span>
+    
+    private GuiceBundle createGuiceBundle(Class&lt;ApiConfiguration&gt; configurationClass, Module module)
+    {
+<span class="nc" id="L65">        Builder guiceBuilder = GuiceBundle.&lt;ApiConfiguration&gt;newBuilder()</span>
+<span class="nc" id="L66">                .addModule(module)</span>
+<span class="nc" id="L67">                .enableAutoConfig(new String[] { &quot;nl.hsleiden&quot; })</span>
+<span class="nc" id="L68">                .setConfigClass(configurationClass);</span>
+
+<span class="nc" id="L70">        return guiceBuilder.build();</span>
+    }
+    
+    private void setupAuthentication(Environment environment)
+    {
+<span class="nc" id="L75">        AuthenticationService authenticationService = guiceBundle.getInjector().getInstance(AuthenticationService.class);</span>
+<span class="nc" id="L76">        ApiUnauthorizedHandler unauthorizedHandler = guiceBundle.getInjector().getInstance(ApiUnauthorizedHandler.class);</span>
+        
+<span class="nc" id="L78">        environment.jersey().register(new AuthDynamicFeature(</span>
+            new BasicCredentialAuthFilter.Builder&lt;User&gt;()
+<span class="nc" id="L80">                .setAuthenticator(authenticationService)</span>
+<span class="nc" id="L81">                .setAuthorizer(authenticationService)</span>
+<span class="nc" id="L82">                .setRealm(&quot;SUPER SECRET STUFF&quot;)</span>
+<span class="nc" id="L83">                .setUnauthorizedHandler(unauthorizedHandler)</span>
+<span class="nc" id="L84">                .buildAuthFilter())</span>
+        );
+        
+<span class="nc" id="L87">        environment.jersey().register(RolesAllowedDynamicFeature.class);</span>
+<span class="nc" id="L88">        environment.jersey().register(new AuthValueFactoryProvider.Binder&lt;&gt;(User.class));</span>
+<span class="nc" id="L89">    }</span>
+    
+    private void configureClientFilter(Environment environment)
+    {
+<span class="nc" id="L93">        environment.getApplicationContext().addFilter(</span>
+            new FilterHolder(new ClientFilter()),
+            &quot;/*&quot;,
+<span class="nc" id="L96">            EnumSet.allOf(DispatcherType.class)</span>
+        );
+<span class="nc" id="L98">    }</span>
+    
+    public static void main(String[] args) throws Exception
+    {
+<span class="nc" id="L102">        new ApiApplication().run(args);</span>
+<span class="nc" id="L103">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
