@@ -1,1 +1,1 @@
-web: java ApiApplication.java -cp target/classes:target/dependency/* sockshop
+web: java -cp target/classes/;target/dependency/* nl.hsleiden.ApiApplication.java
