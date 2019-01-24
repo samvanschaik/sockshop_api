@@ -1,1 +1,1 @@
-web: java $JAVA_OPTS -cp target/classes:target/dependency/* sockshop
+web: java ApiApplication.java -cp target/classes:target/dependency/* sockshop
