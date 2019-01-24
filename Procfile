@@ -1,1 +1,1 @@
-web: java -cp target/classes/;target/dependency/* nl.hsleiden.ApiApplication.java
+web: java -jar target\workshop-api-1.0-SNAPSHOT.jar server configuration.yml%
